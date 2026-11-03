@@ -76,8 +76,8 @@ class MigrationTests(unittest.TestCase):
             root = home/'repo'
             directory = root/'config/migration'
             directory.mkdir(parents=True)
-            (directory/'credentials.json').write_text('{"githubSshPublicKey":"op://vault/github/public_key","additionalSshPublicKeys":{"colab":"op://vault/colab/public_key"}}')
-            response = SimpleNamespace(returncode=0, stdout='[[colab]]\nssh-ed25519 Y29sYWI= colab-comment\n[[/colab]]\n[[github]]\nssh-ed25519 cHVibGlj test-comment\n\n[[/github]]\n')
+            (directory/'credentials.json').write_text('{"githubSshPublicKey":"op://vault/github/public_key","additionalSshPublicKeys":{"colab":"op://vault/colab/public_key","hpc":"op://hermes/hpc/public_key"}}')
+            response = SimpleNamespace(returncode=0, stdout='[[colab]]\nssh-ed25519 Y29sYWI= colab-comment\n[[/colab]]\n[[hpc]]\nssh-ed25519 aHBj hpc-comment\n[[/hpc]]\n[[github]]\nssh-ed25519 cHVibGlj test-comment\n\n[[/github]]\n')
             with patch.object(setup.Path, 'home', return_value=home), patch.object(setup.shutil, 'which', return_value='/fake/op'), patch.object(setup.subprocess, 'run', return_value=response) as run:
                 self.assertTrue(setup.restore_github_identity(root))
                 run.assert_called_once()
@@ -87,7 +87,9 @@ class MigrationTests(unittest.TestCase):
                 self.assertIn('/public_key', template)
                 self.assertNotIn('/private_key', template)
                 self.assertIn('op://vault/colab/public_key', template)
+                self.assertIn('op://hermes/hpc/public_key', template)
                 self.assertEqual((home/'.ssh/1password-colab.pub').read_text(), 'ssh-ed25519 Y29sYWI=\n')
+                self.assertEqual((home/'.ssh/1password-hpc.pub').read_text(), 'ssh-ed25519 aHBj\n')
                 key = home/'.ssh/1password-github.pub'
                 self.assertEqual(key.read_text(), 'ssh-ed25519 cHVibGlj\n')
                 self.assertEqual(key.stat().st_mode & 0o777, 0o600)

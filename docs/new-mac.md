@@ -106,10 +106,11 @@ keys or new vault items were imported during the mapping audit.
 
 SSH exceptions also need review: the reference configuration includes a local
 Colab key and HPC connections that explicitly use a local key and disable the
-agent. Both local public keys differ from the mapped vault key. These host
-blocks are not copied because their dependencies would be
-missing. The Colab key has since been imported into 1Password; HPC import was
-skipped at the user's request. Configure host key selection and verify each
+agent. Both local public keys differ from the GitHub key. These host blocks
+are not copied because their local-file and agent settings need adaptation.
+The Colab key was imported into 1Password. On November 3, the existing Hermes
+SSH item `id_ed25519_utd_hpc` was verified to match the local HPC public key
+and added to the reference map without a vault write. Configure host key selection and verify each
 connection before considering it migrated. Unattended services may need a scoped
 service account or their native credential store rather than an interactive
 unlock. Never store a service-account bootstrap token in this repository.
@@ -132,7 +133,8 @@ items are not rewritten. One approval is the aim; expiry, app locking, separate
 accounts, and SSH-agent authorization can still produce another prompt.
 
 The import plan contains only the Colab SSH key, successfully imported on
-November 2. The HPC key was excluded at the user's request.
+November 2. HPC reuses the existing Hermes SSH key item, so no duplicate import
+or passphrase retrieval is needed. Both original local keys remain unchanged.
 Preview it without accessing 1Password or reading private-key contents:
 
 ```sh
@@ -153,16 +155,14 @@ Passphrase-protected OpenSSH keys are decrypted in memory using the pinned
 `credential-python` runtime; originals are never decrypted on disk. Map their
 passphrase to the correct 1Password reference before the batch, or use
 `--prompt-passphrases` to type it locally with echo disabled. Do not paste a
-passphrase into chat. The earlier attempt involving the encrypted HPC key
-stopped before any writes because the candidate passphrase did not unlock it.
-The subsequent Colab-only import succeeded; both original local keys remain
-unchanged.
+passphrase into chat. This is unnecessary for the already-stored HPC key.
 
 Successful creation updates the local reference map from the returned item IDs,
 without a follow-up vault read. Commit and push the reference-map change before
-running setup on the destination. The new Mac exports the GitHub and Colab
-public keys in one
-invocation and leaves private-key operations to the SSH agent. Additional HPC
+running setup on the destination. The new Mac exports the GitHub, Colab, and HPC
+public keys in one invocation and leaves private-key operations to the SSH agent.
+Ensure the destination's 1Password SSH agent exposes the HPC item from Hermes.
+Additional HPC
 host routing and the Colab tool's dynamic connection setup still need validation
 before those connections can be called migrated.
 
