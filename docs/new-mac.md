@@ -223,8 +223,12 @@ Sources: [1Password agent selection](https://www.1password.dev/ssh/agent/config)
 
 ## Settings requiring a supported export or fresh approval
 
-- Finicky rules are managed. Set Finicky as the default web browser after
-  installation; then verify the mail-link route.
+- Finicky rules mirror Scriptable's DeepLink URL decoding: Mail links go to Mail,
+  web links to Safari, and other schemes to their registered Mac application via
+  the bundled DeepLink Opener. The Scriptable DeepLink source is also saved in
+  `config/scriptable/DeepLink.js`. Set Finicky as the default web browser after
+  installation; verify representative Mail and app links. Apps that only exist
+  on iOS still need an appropriate Mac counterpart. See `config/finicky/README.md`.
 - Use each browser's sync for profiles/extensions. Cookies and session databases
   are not copied into Nix. Browser sync still requires sign-in.
 - Launcher configuration and licensed BetterDisplay state have not been

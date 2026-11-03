@@ -4,7 +4,9 @@
   homeDirectory,
   ...
 }:
-
+let
+  deepLinkOpener = pkgs.callPackage ../packages/deeplink-opener.nix { };
+in
 {
   home = {
     inherit username homeDirectory;
@@ -30,7 +32,9 @@
 
   # Finicky is the macOS HTTP(S) router. Keep the rule source in this flake so
   # its DeepLink behaviour is reproducible after a new-machine activation.
-  home.file.".finicky.js".source = ../config/finicky/finicky.js;
+  home.file.".finicky.js".source = pkgs.replaceVars ../config/finicky/finicky.js {
+    deepLinkOpener = "${deepLinkOpener}/Applications/DeepLink Opener.app";
+  };
 
   programs.git = {
     enable = true;
