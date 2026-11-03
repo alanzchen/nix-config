@@ -5,6 +5,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import contextlib
+import io
+import json
+import os
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -22,9 +26,90 @@ def load(name):
 setup = load('setup-user')
 secrets = load('with-secrets')
 imports = load('import-credentials')
+colab_ssh = load('colab-ssh-config')
+agentsview = load('agentsview-start')
 
 
 class MigrationTests(unittest.TestCase):
+    def test_colab_endpoint_validation_and_custom_config_preservation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            (home/'.ssh').mkdir()
+            (home/'.ssh/1password-colab.pub').write_text('ssh-ed25519 cHVibGlj\n')
+            for hostname in ['bad.com', 'a.trycloudflare.com\nProxyCommand bad', '-oProxyCommand=bad']:
+                with self.assertRaises(ValueError):
+                    colab_ssh.configure(hostname, home, '/nix/store/test/bin/cloudflared')
+            colab_ssh.configure('first.trycloudflare.com', home, '/nix/store/test/bin/cloudflared')
+            target = home/'.ssh/config.d/30-colab.conf'
+            self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+            colab_ssh.configure('second.trycloudflare.com', home, '/nix/store/test/bin/cloudflared')
+            self.assertIn('second.trycloudflare.com', target.read_text())
+            self.assertIn('StrictHostKeyChecking ask', target.read_text())
+            target.write_text('custom routing')
+            with self.assertRaises(ValueError):
+                colab_ssh.configure('third.trycloudflare.com', home, '/nix/store/test/bin/cloudflared')
+            self.assertEqual(target.read_text(), 'custom routing')
+
+    def test_hpc_effective_routing_and_existing_trusted_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp)/'config'
+            config.write_text((ROOT/'config/migration/ssh-hosts.conf').read_text() + '\nHost *\n  IdentityAgent /tmp/test-agent.sock\n')
+            for host, alias in [('ganymede2','ganymede2.circ.utdallas.edu'),('juno','juno.hpcre.utdallas.edu')]:
+                result = subprocess.run(['/usr/bin/ssh','-G','-F',str(config),host], capture_output=True,text=True,check=True)
+                settings = dict(line.split(' ',1) for line in result.stdout.splitlines())
+                self.assertEqual(settings['proxyjump'],'oracle-ts')
+                self.assertEqual(settings['hostkeyalias'],alias)
+                self.assertEqual(settings['identityagent'],'/tmp/test-agent.sock')
+                self.assertEqual(settings['identityfile'],'~/.ssh/1password-hpc.pub')
+                self.assertEqual(settings['stricthostkeychecking'],'true')
+                self.assertEqual(settings['forwardagent'],'no')
+                found = subprocess.run(['/usr/bin/ssh-keygen','-F',alias,'-f',str(ROOT/'config/migration/known_hosts')],capture_output=True)
+                self.assertEqual(found.returncode,0)
+
+    def test_agentsview_waits_for_tailscale_and_uses_destination_address(self):
+        for data in [{'BackendState':'NeedsLogin'}, {'BackendState':'Running','Self':{'TailscaleIPs':['192.168.1.1']}}]:
+            with patch.object(agentsview.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=json.dumps(data))):
+                with self.assertRaises(ValueError):agentsview.tailscale_address('/fake/tailscale')
+        data={'BackendState':'Running','Self':{'TailscaleIPs':['100.100.100.100']}}
+        with patch.object(agentsview.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=json.dumps(data))):
+            self.assertEqual(agentsview.tailscale_address('/fake/tailscale'),'100.100.100.100')
+
+    def test_agentsview_start_isolated_state_and_no_vault_access(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home=Path(tmp)
+            old=home/'.agentsview/config.toml'
+            old.parent.mkdir();old.write_text('original config')
+            previous_umask=os.umask(0o077)
+            try:
+                with patch.object(sys,'argv',['agentsview-start','/fake/agentsview','/fake/tailscale']), patch.object(agentsview.Path,'home',return_value=home), patch.object(agentsview,'tailscale_address',return_value='100.100.100.100'), patch.dict(os.environ,{'AGENTSVIEW_AUTH_TOKEN':'synthetic old token'},clear=True), patch.object(agentsview.os,'execv') as execute:
+                    agentsview.main()
+                    args=execute.call_args.args[1]
+                    self.assertIn('--require-auth',args)
+                    self.assertIn('--no-sync',args)
+                    self.assertIn('100.100.100.100',args)
+                    self.assertEqual(os.environ['AGENTSVIEW_DATA_DIR'],str(home/'.local/share/agentsview-nix'))
+                    self.assertNotIn('AGENTSVIEW_AUTH_TOKEN',os.environ)
+                    cfg=home/'.local/share/agentsview-nix/config.toml'
+                    self.assertEqual(cfg.stat().st_mode & 0o777,0o600)
+                    cfg.write_text('require_auth = true\n# retained edit\n')
+                    agentsview.main()
+                    self.assertIn('retained edit',cfg.read_text())
+                    self.assertEqual(old.read_text(),'original config')
+            finally:
+                os.umask(previous_umask)
+
+    def test_verification_reports_missing_keys_without_vault_or_network(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home=Path(tmp)
+            with patch.object(setup.Path,'home',return_value=home), patch.object(setup.shutil,'which',return_value=None), patch.object(setup.subprocess,'run',return_value=SimpleNamespace(returncode=1,stdout='')) as run, contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(setup.verify(ROOT),2)
+                run.assert_called_once()
+                self.assertEqual(run.call_args.args[0][:2],['/bin/launchctl','print'])
+            report=json.loads((home/'.local/state/mac-bootstrap/verification.json').read_text())
+            self.assertFalse(report['vaultQueried'])
+            self.assertTrue(any('hpc: mapped public key' in x for x in report['pending']))
+            self.assertTrue(any('Google OAuth' in x for x in report['manual']))
+
     def test_encrypted_import_keeps_original_key_unchanged(self):
         try:
             from cryptography.hazmat.primitives import serialization

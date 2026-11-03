@@ -57,8 +57,18 @@ bash scripts/bootstrap-mac.sh --plan
   extension IDs. Later runs preserve edited settings and retry missing
   extensions. Versions come from the marketplace, not archived extension files.
 - Configures SSH to use the 1Password agent, with local host overrides in
-  `~/.ssh/config.d/`. Reads only the mapped public key to configure GitHub key
-  selection; no private keys are exported. Existing custom routing is preserved.
+  `~/.ssh/config.d/`. Declares the GitHub, Colab and Hermes HPC items in
+  `~/.config/1Password/ssh/agent.toml`. No private keys are exported.
+- Adds portable aliases for comma/comma3, oracle, alan-mac-studio, work-mbp,
+  oracle-ts, ganymede2 and juno. HPC uses its mapped public key and the local
+  1Password agent through the existing Oracle jump host, without agent forwarding.
+  Existing trusted host keys are retained in a separate known-hosts file.
+- Installs AgentsView 0.45.0 from the upstream Apple-silicon archive, verified by
+  its published SHA-256. Declares an authenticated Tailscale spoke at login,
+  using the destination's own address and separate mutable state.
+- Installs a Colab 0.6.0 wrapper with all Python dependencies locked in
+  `packages/colab/uv.lock`. Bootstrap downloads and warms its user environment;
+  this requires PyPI network access after the Nix build. It does not sign in.
 - Resolves all mapped SSH public keys in one `op inject` invocation. Later
   verification is local and does not prompt for another vault session.
   Exit status 2 means local setup checks need attention.
@@ -104,16 +114,22 @@ file and `IdentitiesOnly`. This comparison does not prove the key has access to
 every remote repository. Check an SSH connection on the destination. No private
 keys or new vault items were imported during the mapping audit.
 
-SSH exceptions also need review: the reference configuration includes a local
-Colab key and HPC connections that explicitly use a local key and disable the
-agent. Both local public keys differ from the GitHub key. These host blocks
-are not copied because their local-file and agent settings need adaptation.
 The Colab key was imported into 1Password. On November 3, the existing Hermes
-SSH item `id_ed25519_utd_hpc` was verified to match the local HPC public key
-and added to the reference map without a vault write. Configure host key selection and verify each
-connection before considering it migrated. Unattended services may need a scoped
-service account or their native credential store rather than an interactive
-unlock. Never store a service-account bootstrap token in this repository.
+SSH item `id_ed25519_utd_hpc` was verified to match the local HPC public key.
+The new profile replaces HPC's old local private-key path and `IdentityAgent none`
+with the mapped public identity and local 1Password agent. Existing host-key
+aliases, strict checks, jump host, username and timeouts are retained. macOS
+Keychain passphrase settings are unnecessary for an agent-held key. Test the
+connections on the destination; captured host keys can change, and local
+configuration does not prove remote authorization or satisfy server-side MFA.
+
+`config/migration/tool-credentials.json` records the selected tools' credential
+decisions. Colab 0.6.0 uses Google OAuth with a native refresh-token cache; it
+does not need a standalone API token. Use a fresh Google sign-in rather than
+copying `token.json`, session tokens or old runtime endpoints. The metadata
+search found no AgentsView-titled 1Password item. The user chose a new per-device
+AgentsView token, to be saved in 1Password later. No vault writes were needed for
+this expansion, and no unrelated service-vault credentials were assigned.
 
 Desktop CLI authorization is session-bound, not permanent: it expires after
 10 minutes of inactivity, has a 12-hour maximum, and is revoked on app lock.
@@ -161,14 +177,49 @@ Successful creation updates the local reference map from the returned item IDs,
 without a follow-up vault read. Commit and push the reference-map change before
 running setup on the destination. The new Mac exports the GitHub, Colab, and HPC
 public keys in one invocation and leaves private-key operations to the SSH agent.
-Ensure the destination's 1Password SSH agent exposes the HPC item from Hermes.
-Additional HPC
-host routing and the Colab tool's dynamic connection setup still need validation
-before those connections can be called migrated.
+The declared agent configuration includes the HPC item from Hermes. Host routing
+is configured, but actual remote SSH sessions remain destination acceptance checks.
 
 Import is not a remote transaction: if the CLI reports partial success or times
 out, rerunning first checks the tagged items rather than blindly creating them
 again. The local receipt contains identifiers only.
+
+## Colab SSH and AgentsView
+
+The installed Colab 0.6.0 CLI communicates through runtime APIs; its command
+table has no `ssh` subcommand. The reference `colab-ssh` alias is a separate
+Cloudflare tunnel setup. The old temporary hostname is intentionally omitted.
+After starting a new runtime's SSH server/tunnel and authorizing the public key
+from `~/.ssh/1password-colab.pub`, run:
+
+```sh
+colab-ssh-config CURRENT.trycloudflare.com
+ssh colab-ssh
+```
+
+The helper updates only its own `30-colab.conf`, preserving custom files. It uses
+the declared cloudflared executable and the 1Password public identity. Verify the
+runtime's host-key fingerprint when prompted; host checking is no longer disabled.
+This helper does not provision a remote SSH server or spend Colab compute units.
+Run `colab sessions` for the initial Google sign-in when you are ready.
+
+The `io.agentsview.nix-spoke` launch agent waits for Tailscale to be running,
+then binds to that Mac's Tailscale IPv4 address on port 18082. It preserves the
+reference service's `--no-browser --no-sync` behavior and disables telemetry.
+The upstream binary generates a new native auth token under
+`~/.local/share/agentsview-nix/config.toml`; the service never calls 1Password.
+Save that token to 1Password locally later and register the new address/token
+with your existing hub. Do not paste the token into chat or commit the config.
+The new archive starts empty; history transfer and remote hub changes are not
+performed by this installer. Existing `~/.agentsview` data remains separate.
+
+Only one service can occupy the chosen address/port. If an existing AgentsView
+service already uses it, review which service to keep before enabling the new
+one; this configuration does not stop or replace unrelated services.
+
+Sources: [1Password agent selection](https://www.1password.dev/ssh/agent/config),
+[AgentsView 0.45.0](https://github.com/kenn-io/agentsview/releases/tag/v0.45.0),
+[Colab CLI](https://github.com/googlecolab/google-colab-cli).
 
 ## Settings requiring a supported export or fresh approval
 
@@ -188,13 +239,10 @@ again. The local receipt contains identifiers only.
   path, machine-specific environment values, a cloud project ID, and terminal
   auto-approval rules were omitted. R uses the declared Homebrew R installation;
   JetBrains Mono is the available font fallback.
-- `config/migration/local-tools.json` inventories additional tools without
-  copying executables. Local-project commands such as `chatgpt-history`, and
-  npm/uv/custom tools still need individual packaging decisions.
-- Third-party launch agents are not bulk-copied. In particular, the existing
-  Snapclient, AgentsView, and Queqiao entries require ownership, executable,
-  active/disabled state, and secret checks before inclusion. A plist's presence
-  does not prove that its service should run on the new Mac.
+- Colab and AgentsView are now declared. The remaining entries in
+  `config/migration/local-tools.json`, such as `chatgpt-history`, instsci,
+  textfold and Oracle CLI, still need individual packaging decisions.
+- Snapclient and Queqiao startup were not selected and are not migrated.
 
 ## Verification and recovery
 
@@ -202,10 +250,18 @@ From the new checkout:
 
 ```sh
 python3 scripts/setup-user.py verify .
-op vault list
 wm-toggle on
 wm-toggle status
 ```
+
+Verification checks the selected application/command inventory, all three
+public-key files, agent selection, managed SSH routes and trusted keys, Colab's
+environment, recorded extension/install failures, and local launch-agent state.
+It makes no vault calls or remote connections. Findings and manual approvals
+are saved to `~/.local/state/mac-bootstrap/verification.json`; exit code 2 means
+there are pending findings. macOS permissions and sign-ins remain explicit
+manual checks, not claims inferred from installation. An existing local `colab`
+or `agentsview` executable that shadows the declared version is reported.
 
 Check Caps Lock navigation and app shortcuts, Control-Option-Space, browser
 routing, Tailscale connectivity, and a representative SSH connection manually.

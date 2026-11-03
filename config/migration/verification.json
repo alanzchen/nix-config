@@ -1,0 +1,20 @@
+{
+  "applications": ["1Password", "Basecamp", "BetterDisplay", "Tailscale", "Hammerspoon", "WinMux", "Karabiner-Elements", "Visual Studio Code", "Ghostty", "Finicky"],
+  "commands": ["git", "gh", "uv", "python3", "node", "op", "claude", "codex", "agentsview", "colab", "colab-ssh-config", "cloudflared", "with-secrets", "wm-toggle"],
+  "manual": [
+    "Enable 1Password CLI integration and its SSH agent; lock/unlock if the new agent configuration is not recognized.",
+    "Approve Karabiner, WinMux, and Hammerspoon permissions in System Settings.",
+    "Run wm-toggle on after WinMux Accessibility approval; verify Caps Lock shortcuts.",
+    "Open Hammerspoon; verify Control-Option-Space with your chosen app.",
+    "Open Finicky, select it as the default web browser, and verify routing.",
+    "Sign in to Tailscale and approve its VPN/system extension; AgentsView waits for it.",
+    "AgentsView uses port 18082 on this Mac's Tailscale address; save its newly generated auth_token from ~/.local/share/agentsview-nix/config.toml to 1Password locally, then register this new spoke on your hub.",
+    "AgentsView preserves --no-sync behavior; the new archive starts empty and existing history is not copied.",
+    "Run colab sessions to complete Google OAuth sign-in; this does not create a runtime.",
+    "For Colab SSH, authorize the exported public key on the runtime, start its tunnel, then run colab-ssh-config CURRENT.trycloudflare.com and verify the runtime host-key fingerprint.",
+    "Verify GitHub access and the oracle-ts jump host before testing ganymede2 and juno; remote access and MFA are not proven by local checks.",
+    "Verify comma/comma3, oracle, alan-mac-studio and work-mbp access; their existing agent-based key selection is preserved.",
+    "Sign in to browsers/Basecamp and activate BetterDisplay if needed; use supported sync/export for private profiles.",
+    "After App Store sign-in, run scripts/install-app-store.sh for Fantastical, Slack and WhatsApp."
+  ]
+}

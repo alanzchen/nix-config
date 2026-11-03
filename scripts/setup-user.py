@@ -9,6 +9,8 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
+import stat
 
 
 def seed(source, target):
@@ -99,7 +101,7 @@ def restore_github_identity(root):
 def restore(root):
     home = Path.home()
     if restore_github_identity(root):
-        print('Configured GitHub public-key selection; private key remains in 1Password.')
+        print('Restored mapped SSH public keys; private keys remain in 1Password.')
     else:
         print('Pending: 1Password public-key setup. Enable CLI integration and rerun setup.')
     source = root / 'config/migration/vscode'
@@ -124,25 +126,99 @@ def restore(root):
     (state/'extension-failures.json').write_text(json.dumps(failures, indent=2)+'\n')
     if failures:
         print(f'{len(failures)} extension install(s) need a retry; see mac-bootstrap/extension-failures.json.')
+    # Use the declared wrapper, not a pre-existing uv tool earlier on PATH.
+    colab = Path('/run/current-system/sw/bin/colab')
+    tool_failures = []
+    try:
+        result = subprocess.run([str(colab), 'version'], capture_output=True, text=True, timeout=300)
+        if result.returncode or '0.6.0' not in result.stdout:
+            tool_failures.append('Colab: rerun /run/current-system/sw/bin/colab version')
+    except (OSError, subprocess.SubprocessError):
+        tool_failures.append('Colab: rerun /run/current-system/sw/bin/colab version')
+    (state/'tool-failures.json').write_text(json.dumps(tool_failures, indent=2)+'\n')
+    for issue in tool_failures:
+        print('Pending: '+issue)
+
+
+def ssh_issues(root, home):
+    """Static local checks only: do not contact the agent, vault, or remote hosts."""
+    issues = []
+    manifest = json.loads((root/'config/migration/credentials.json').read_text())
+    references = dict(manifest.get('additionalSshPublicKeys', {}))
+    references['github'] = manifest['githubSshPublicKey']
+    sock = home/'Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock'
+    if not sock.exists() or not stat.S_ISSOCK(sock.stat().st_mode):
+        issues.append('1Password: SSH agent socket is unavailable; enable the SSH agent')
+    try:
+        agent = tomllib.loads((home/'.config/1Password/ssh/agent.toml').read_text())
+        configured = {(x.get('vault'), x.get('item')) for x in agent.get('ssh-keys', [])}
+    except (OSError, ValueError, TypeError, AttributeError):
+        configured = set()
+    for name, reference in references.items():
+        parts = reference.split('/')
+        if (parts[2], parts[3]) not in configured:
+            issues.append(f'1Password agent selection: {name} key is not declared')
+        key = home/f'.ssh/1password-{name}.pub'
+        try:
+            words = key.read_text().split()
+            if len(words) < 2 or words[0] not in ['ssh-rsa','ssh-ed25519','ecdsa-sha2-nistp256','ecdsa-sha2-nistp384','ecdsa-sha2-nistp521']:
+                raise ValueError()
+            base64.b64decode(words[1], validate=True)
+        except (OSError, ValueError):
+            issues.append(f'{name}: mapped public key missing or invalid; rerun setup-user.py restore')
+    expected = {
+        '.ssh/config.d/20-migration-hosts.conf': root/'config/migration/ssh-hosts.conf',
+        '.ssh/known_hosts_migration': root/'config/migration/known_hosts',
+        '.ssh/known_hosts_comma': root/'config/migration/known_hosts_comma',
+    }
+    for relative, source in expected.items():
+        target = home/relative
+        if not target.is_file() or target.read_text() != source.read_text():
+            issues.append(f'SSH migration file missing or changed: {relative}')
+    main = home/'.ssh/config'
+    text = main.read_text() if main.is_file() else ''
+    if ('Include ~/.ssh/config.d/*' not in text or '1password/t/agent.sock' not in text
+            or '~/.ssh/known_hosts_migration' not in text):
+        issues.append('SSH: migration includes, trusted hosts or 1Password agent routing are missing')
+    github = home/'.ssh/config.d/10-github.conf'
+    if not github.is_file() or 'IdentityFile ~/.ssh/1password-github.pub' not in github.read_text():
+        issues.append('GitHub: public-key selection not restored; rerun setup-user.py restore')
+    return issues
 
 
 def verify(root):
     issues = []
-    for app in ['1Password', 'Basecamp', 'BetterDisplay', 'Tailscale', 'Hammerspoon', 'WinMux']:
+    expected = json.loads((root/'config/migration/verification.json').read_text())
+    for app in expected['applications']:
         if not (Path('/Applications')/(app+'.app')).is_dir():
             issues.append(f'{app}: application missing')
     # Keep verification local: do not open a second authorization session after
     # potentially lengthy application/extension installation.
-    if not shutil.which('op'):
-        issues.append('1Password CLI is not installed')
-    sock = Path.home()/'Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock'
-    if not sock.exists():
-        issues.append('1Password: enable the SSH agent under Settings > Developer')
-    github_config = Path.home()/'.ssh/config.d/10-github.conf'
-    if (not (Path.home()/'.ssh/1password-github.pub').is_file()
-            or not github_config.is_file()
-            or 'IdentityFile ~/.ssh/1password-github.pub' not in github_config.read_text()):
-        issues.append('GitHub: mapped public-key selection not restored; rerun setup-user.py restore')
+    for command in expected['commands']:
+        actual = shutil.which(command)
+        if not actual:
+            issues.append(f'{command}: command missing from PATH')
+        elif command in ['agentsview','colab']:
+            declared = Path('/run/current-system/sw/bin')/command
+            if declared.exists() and Path(actual).resolve() != declared.resolve():
+                issues.append(f'{command}: an older local installation shadows the declared command ({actual})')
+    issues.extend(ssh_issues(root, Path.home()))
+    state = Path.home()/'.local/state/mac-bootstrap'
+    for name in ['extension-failures.json', 'tool-failures.json']:
+        path = state/name
+        if path.is_file():
+            pending = json.loads(path.read_text())
+            if pending:
+                issues.append(f'{len(pending)} incomplete installation(s): see {path}')
+    if not (Path.home()/'.local/share/nix-colab/venv/bin/colab').is_file():
+        issues.append('Colab environment missing: run /run/current-system/sw/bin/colab version')
+    try:
+        service = subprocess.run(['/bin/launchctl', 'print', f'gui/{os.getuid()}/io.agentsview.nix-spoke'],
+                                 capture_output=True, text=True, timeout=10)
+        if service.returncode or not re.search(r'^\s*state = running\s*$', service.stdout, re.M):
+            issues.append('AgentsView spoke is not running; check Tailscale sign-in and mac-bootstrap/agentsview.stderr.log')
+    except (OSError, subprocess.SubprocessError):
+        issues.append('AgentsView launch-agent status could not be checked')
     print('\nInstallation checks:')
     for issue in issues:
         print('  Pending: '+issue)
@@ -150,18 +226,13 @@ def verify(root):
         print('  Selected applications and local SSH configuration are available.')
     print('  Vault authentication was not rechecked; verification makes no 1Password calls.')
     print('\nFirst-run checklist (manual approvals are not inferred from installation):')
-    for item in [
-        'Approve Karabiner, WinMux, and Hammerspoon permissions in System Settings.',
-        'Run wm-toggle on after WinMux Accessibility approval; verify Caps Lock shortcuts.',
-        'Open Hammerspoon; verify Control-Option-Space with the current ChatGPT/Codex app.',
-        'Open Finicky and select it as the default web browser.',
-        'Sign in to Tailscale and approve its VPN/system extension.',
-        'Sign in to browsers/Basecamp and activate BetterDisplay if needed.',
-        'Use browser sync and supported launcher exports to restore private profiles.',
-        'App Store apps: after sign-in, run scripts/install-app-store.sh.',
-        'See docs/new-mac.md for SSH key exceptions and remaining custom tools.',
-    ]:
+    for item in expected['manual']:
         print('  '+item)
+    state.mkdir(parents=True, exist_ok=True, mode=0o700)
+    report = state/'verification.json'
+    report.write_text(json.dumps({'pending':issues, 'manual':expected['manual'], 'vaultQueried':False}, indent=2)+'\n')
+    report.chmod(0o600)
+    print(f'\nSaved checklist: {report}')
     return 2 if issues else 0
 
 
