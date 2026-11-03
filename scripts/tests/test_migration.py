@@ -73,20 +73,27 @@ class MigrationTests(unittest.TestCase):
     def test_github_setup_exports_only_public_key_and_preserves_edits(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
-            response = SimpleNamespace(returncode=0, stdout='[[github]]\nssh-ed25519 cHVibGlj test-comment\n\n[[/github]]\n')
+            root = home/'repo'
+            directory = root/'config/migration'
+            directory.mkdir(parents=True)
+            (directory/'credentials.json').write_text('{"githubSshPublicKey":"op://vault/github/public_key","additionalSshPublicKeys":{"colab":"op://vault/colab/public_key"}}')
+            response = SimpleNamespace(returncode=0, stdout='[[colab]]\nssh-ed25519 Y29sYWI= colab-comment\n[[/colab]]\n[[github]]\nssh-ed25519 cHVibGlj test-comment\n\n[[/github]]\n')
             with patch.object(setup.Path, 'home', return_value=home), patch.object(setup.shutil, 'which', return_value='/fake/op'), patch.object(setup.subprocess, 'run', return_value=response) as run:
-                self.assertTrue(setup.restore_github_identity(ROOT))
+                self.assertTrue(setup.restore_github_identity(root))
+                run.assert_called_once()
                 args = run.call_args.args[0]
                 self.assertEqual(args, ['/fake/op', 'inject'])
                 template = run.call_args.kwargs['input']
                 self.assertIn('/public_key', template)
                 self.assertNotIn('/private_key', template)
+                self.assertIn('op://vault/colab/public_key', template)
+                self.assertEqual((home/'.ssh/1password-colab.pub').read_text(), 'ssh-ed25519 Y29sYWI=\n')
                 key = home/'.ssh/1password-github.pub'
                 self.assertEqual(key.read_text(), 'ssh-ed25519 cHVibGlj\n')
                 self.assertEqual(key.stat().st_mode & 0o777, 0o600)
                 config = home/'.ssh/config.d/10-github.conf'
                 config.write_text('user routing')
-                self.assertFalse(setup.restore_github_identity(ROOT))
+                self.assertFalse(setup.restore_github_identity(root))
                 self.assertEqual(config.read_text(), 'user routing')
 
     def test_github_setup_rejects_private_key_reference_before_cli(self):

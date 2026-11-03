@@ -92,8 +92,8 @@ Vault access was confirmed on November 2 after the app integration was enabled.
 `op whoami` still reported not signed in while authenticated vault/item reads
 succeeded. It is not used as a prerequisite. An explicit `op vault list` is a
 useful interactive diagnostic, but normal verification does not query the vault.
-`config/migration/credentials.json` contains item identifiers and a public-key
-reference only. It maps the existing GitHub, Basecamp, and Tailscale logins and
+`config/migration/credentials.json` contains item identifiers and public-key
+references only. It maps the existing GitHub, Basecamp, and Tailscale logins and
 records two OpenAI login candidates without choosing an account automatically.
 Website login passwords are not treated as API keys or device enrollment tokens.
 Unrelated service-vault API credentials are not injected into this Mac's shell.
@@ -108,8 +108,9 @@ SSH exceptions also need review: the reference configuration includes a local
 Colab key and HPC connections that explicitly use a local key and disable the
 agent. Both local public keys differ from the mapped vault key. These host
 blocks are not copied because their dependencies would be
-missing. Import suitable keys into 1Password deliberately, configure host key
-selection, and verify each connection. Unattended services may need a scoped
+missing. The Colab key has since been imported into 1Password; HPC import was
+skipped at the user's request. Configure host key selection and verify each
+connection before considering it migrated. Unattended services may need a scoped
 service account or their native credential store rather than an interactive
 unlock. Never store a service-account bootstrap token in this repository.
 
@@ -130,7 +131,8 @@ Preparation and routine validation do not query 1Password, and existing login
 items are not rewritten. One approval is the aim; expiry, app locking, separate
 accounts, and SSH-agent authorization can still produce another prompt.
 
-The prepared import plan currently contains the HPC and Colab SSH keys only.
+The import plan contains only the Colab SSH key, successfully imported on
+November 2. The HPC key was excluded at the user's request.
 Preview it without accessing 1Password or reading private-key contents:
 
 ```sh
@@ -151,13 +153,15 @@ Passphrase-protected OpenSSH keys are decrypted in memory using the pinned
 `credential-python` runtime; originals are never decrypted on disk. Map their
 passphrase to the correct 1Password reference before the batch, or use
 `--prompt-passphrases` to type it locally with echo disabled. Do not paste a
-passphrase into chat. The reference HPC key is encrypted and still requires
-the correct passphrase source; the first attempted source did not unlock it.
-The attempted batch stopped before writing either key.
+passphrase into chat. The earlier attempt involving the encrypted HPC key
+stopped before any writes because the candidate passphrase did not unlock it.
+The subsequent Colab-only import succeeded; both original local keys remain
+unchanged.
 
 Successful creation updates the local reference map from the returned item IDs,
 without a follow-up vault read. Commit and push the reference-map change before
-running setup on the destination. The new Mac exports public keys only in one
+running setup on the destination. The new Mac exports the GitHub and Colab
+public keys in one
 invocation and leaves private-key operations to the SSH agent. Additional HPC
 host routing and the Colab tool's dynamic connection setup still need validation
 before those connections can be called migrated.
