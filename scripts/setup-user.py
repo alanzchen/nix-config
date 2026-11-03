@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tomllib
 import stat
+import plistlib
 
 
 def seed(source, target):
@@ -34,7 +35,9 @@ def identity(root):
     if Path.home() != Path('/Users') / username:
         raise ValueError('This bootstrap currently requires a standard /Users/<username> home')
     path = root / 'hosts/personal-new/identity.json'
-    path.write_text(json.dumps(dict(username=username, hostName=hostname, computerName=computer), indent=2) + '\n')
+    store = plistlib.loads(subprocess.check_output(['/usr/sbin/diskutil', 'info', '-plist', '/nix']))
+    path.write_text(json.dumps(dict(username=username, hostName=hostname, computerName=computer,
+                                   externalNixStore=store.get('Internal') is False), indent=2) + '\n')
 
 
 def restore_github_identity(root):

@@ -9,6 +9,7 @@ import contextlib
 import io
 import json
 import os
+import plistlib
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -31,6 +32,23 @@ agentsview = load('agentsview-start')
 
 
 class MigrationTests(unittest.TestCase):
+    def test_destination_identity_detects_external_store(self):
+        for internal in [True, False]:
+            with self.subTest(internal=internal), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                (root/'hosts/personal-new').mkdir(parents=True)
+                def output(command, **kwargs):
+                    if command[0] == '/usr/sbin/diskutil':
+                        return plistlib.dumps({'Internal': internal})
+                    return 'New-Mac\n' if command[-1] == 'LocalHostName' else 'New Mac\n'
+                with patch.object(setup.getpass, 'getuser', return_value='alan'), \
+                     patch.object(setup.Path, 'home', return_value=Path('/Users/alan')), \
+                     patch.object(setup.subprocess, 'check_output', side_effect=output):
+                    setup.identity(root)
+                identity = json.loads((root/'hosts/personal-new/identity.json').read_text())
+                self.assertEqual(identity['hostName'], 'New-Mac')
+                self.assertEqual(identity['externalNixStore'], not internal)
+
     def test_colab_endpoint_validation_and_custom_config_preservation(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
@@ -246,10 +264,10 @@ class MigrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root/'hosts/personal-new').mkdir(parents=True)
-            with patch.object(setup.getpass,'getuser',return_value='newuser'), patch.object(setup.Path,'home',return_value=Path('/Users/newuser')), patch.object(setup.subprocess,'check_output',side_effect=['new-mac\n','New Mac\n']):
+            with patch.object(setup.getpass,'getuser',return_value='newuser'), patch.object(setup.Path,'home',return_value=Path('/Users/newuser')), patch.object(setup.subprocess,'check_output',side_effect=['new-mac\n','New Mac\n',plistlib.dumps({'Internal': True})]):
                 setup.identity(root)
             data = setup.json.loads((root/'hosts/personal-new/identity.json').read_text())
-            self.assertEqual(data,dict(username='newuser',hostName='new-mac',computerName='New Mac'))
+            self.assertEqual(data,dict(username='newuser',hostName='new-mac',computerName='New Mac',externalNixStore=False))
 
 
 if __name__ == '__main__':

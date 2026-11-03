@@ -250,6 +250,35 @@ Sources: [1Password agent selection](https://www.1password.dev/ssh/agent/config)
 
 ## Verification and recovery
 
+### Nix store on an external disk
+
+If the daemon log reports `file system sandbox blocked open()` and macOS logs
+identify `SystemPolicyRemovableVolumes`, the external Nix volume needs a privacy
+approval. The bootstrap now checks daemon connectivity before attempting builds.
+On the affected Mac, run:
+
+```sh
+bash ~/Developer/nix-config/scripts/repair-external-nix.sh
+```
+
+Enter the administrator password locally. The repair compiles a dedicated native
+launcher, installs it as root at `/usr/local/libexec/nix-daemon-launcher`, backs
+up the existing daemon plist as `.before-external-store`, and restarts only the
+Nix daemon using the launcher. In System Settings > Privacy & Security > Full
+Disk Access, add that launcher (Cmd-Shift-G in the file picker accepts its path).
+It launches only the root-managed Nix daemon and accepts no command arguments.
+The original plist and Nix store are preserved. Do not grant a general shell
+Full Disk Access or disable macOS security to address this failure.
+
+After approval, rerun the bootstrap. It detects the external store and preserves
+the launcher in the new Mac's declarative service configuration. The launcher
+stays at a stable path and runs the activated Nix version, falling back to the
+initial installer version before the first activation. Replacing the launcher
+binary later requires review and may require renewed privacy approval.
+See the [upstream external-store issue](https://github.com/NixOS/nix/issues/6291).
+
+### Post-install checks
+
 From the new checkout:
 
 ```sh

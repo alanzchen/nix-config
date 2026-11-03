@@ -56,6 +56,11 @@ if ! command -v nix >/dev/null 2>&1; then
 fi
 command -v nix >/dev/null 2>&1 || { echo "Nix installation did not finish." >&2; exit 1; }
 nix_cmd=(nix --extra-experimental-features 'nix-command flakes')
+if ! "${nix_cmd[@]}" store info --store daemon >/dev/null; then
+  echo 'Nix is installed, but its daemon is unavailable. See /var/log/nix-daemon.log.' >&2
+  echo 'For an external-disk privacy denial, run scripts/repair-external-nix.sh locally and approve its dedicated launcher.' >&2
+  exit 1
+fi
 "${nix_cmd[@]}" build "$ROOT#darwinConfigurations.personal-new.pkgs.python3" \
   --no-write-lock-file --out-link "$state/python"
 python="$state/python/bin/python3"
