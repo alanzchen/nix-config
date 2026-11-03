@@ -24,6 +24,15 @@ in
   # MAS needs an Apple account sign-in; install these in the resumable user step.
   homebrew.masApps = lib.mkForce { };
   home-manager.backupFileExtension = "before-nix";
+  # Reviewed macOS 27.2 defaults with the upstream Nix installer's startup
+  # block. Exact hashes only: nix-darwin preserves them as .before-nix-darwin
+  # before replacing them, while still refusing unrecognized custom content.
+  environment.etc."bashrc".knownSha256Hashes = [
+    "8b5e3466922d1ae34bc145e21c7e53e7329a7a7b58b148b436bd954d5e651ac3"
+  ];
+  environment.etc."zshrc".knownSha256Hashes = [
+    "cf0f7b7775b4c058d6085d9e7e57d58c307ca43730f8e4d921a9ef4e530e7e16"
+  ];
   # Keep the externally approved launcher stable across Nix upgrades.
   launchd.daemons.nix-daemon.serviceConfig.ProgramArguments = lib.mkIf (identity.externalNixStore
     or false
