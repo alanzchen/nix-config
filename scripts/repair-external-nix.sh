@@ -10,7 +10,7 @@ plist=/Library/LaunchDaemons/org.nixos.nix-daemon.plist
 [ -f "$plist" ] || { echo 'Install Nix first.' >&2; exit 1; }
 /usr/sbin/diskutil info -plist /nix | /usr/bin/python3 -c '
 import plistlib, sys
-info = plistlib.load(sys.stdin.buffer)
+info = plistlib.loads(sys.stdin.buffer.read())
 if info.get("Internal") is not False:
     sys.exit("This repair is only for an external Nix store.")
 '

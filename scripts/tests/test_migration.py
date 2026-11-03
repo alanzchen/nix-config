@@ -32,6 +32,18 @@ agentsview = load('agentsview-start')
 
 
 class MigrationTests(unittest.TestCase):
+    def test_external_store_repair_reads_piped_plist_with_apple_python(self):
+        script = (ROOT/'scripts/repair-external-nix.sh').read_text()
+        check = script.split("/usr/bin/python3 -c '\n", 1)[1].split("\n'\n", 1)[0]
+        for fmt in [plistlib.FMT_XML, plistlib.FMT_BINARY]:
+            for internal in [True, False]:
+                with self.subTest(fmt=fmt, internal=internal):
+                    result = subprocess.run(['/usr/bin/python3', '-c', check],
+                                            input=plistlib.dumps({'Internal': internal}, fmt=fmt),
+                                            capture_output=True)
+                    self.assertEqual(result.returncode, 1 if internal else 0, result.stderr)
+                    self.assertNotIn(b'Traceback', result.stderr)
+
     def test_destination_identity_detects_external_store(self):
         for internal in [True, False]:
             with self.subTest(internal=internal), tempfile.TemporaryDirectory() as tmp:
