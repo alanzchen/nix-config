@@ -114,6 +114,9 @@
     {
       inherit darwinConfigurations;
 
+      packages.aarch64-darwin.credential-python =
+        darwinConfigurations.personal-new.pkgs.python3.withPackages (ps: [ ps.cryptography ps.bcrypt ]);
+
       homeConfigurations."ubuntu@oracle" = oracleHome;
 
       checks = {

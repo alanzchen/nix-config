@@ -25,6 +25,29 @@ imports = load('import-credentials')
 
 
 class MigrationTests(unittest.TestCase):
+    def test_encrypted_import_keeps_original_key_unchanged(self):
+        try:
+            from cryptography.hazmat.primitives import serialization
+            from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        except ImportError:
+            self.skipTest('Run with credential-python to test encrypted imports')
+        with tempfile.TemporaryDirectory() as tmp:
+            key = Ed25519PrivateKey.generate()
+            encrypted = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.OpenSSH, serialization.BestAvailableEncryption(b'test passphrase'))
+            path = Path(tmp)/'key'
+            path.write_bytes(encrypted)
+            public = key.public_key().public_bytes(serialization.Encoding.OpenSSH,serialization.PublicFormat.OpenSSH)
+            Path(str(path)+'.pub').write_bytes(public)
+            plan = {'tag':'test','sshKeys':[{'title':'encrypted','path':str(path),'passphraseReference':'op://vault/item/password'}]}
+            self.assertTrue(imports.encrypted_openssh(encrypted))
+            items = imports.prepare_items(plan,set(),lambda ref: b'test passphrase')
+            restored = serialization.load_ssh_private_key(items[0]['fields'][0]['value'].encode(),password=None)
+            self.assertEqual(restored.public_key().public_bytes(serialization.Encoding.OpenSSH,serialization.PublicFormat.OpenSSH),public)
+            self.assertEqual(path.read_bytes(),encrypted)
+            with self.assertRaises(ValueError):
+                imports.prepare_items(plan,set(),lambda ref: b'wrong passphrase')
+            self.assertEqual(path.read_bytes(),encrypted)
+
     def test_import_preview_never_calls_onepassword(self):
         with patch.object(sys, 'argv', ['import-credentials']), patch.object(imports.subprocess, 'run') as run:
             imports.main()

@@ -140,15 +140,20 @@ python3 scripts/import-credentials.py
 After reviewing that plan, the write step is:
 
 ```sh
-python3 scripts/import-credentials.py --apply
+bash scripts/import-credentials.sh --apply
 ```
 
 The script performs one tagged metadata lookup for retry safety, validates all
 missing keys locally, and submits them together through stdin to one
 `op item create` call. Values never appear in command arguments or output.
 It leaves original keys in place and does not edit existing vault items.
-Passphrase-protected keys need separate preparation and cause the batch to stop
-before writing. No import has yet been executed or live-tested.
+Passphrase-protected OpenSSH keys are decrypted in memory using the pinned
+`credential-python` runtime; originals are never decrypted on disk. Map their
+passphrase to the correct 1Password reference before the batch, or use
+`--prompt-passphrases` to type it locally with echo disabled. Do not paste a
+passphrase into chat. The reference HPC key is encrypted and still requires
+the correct passphrase source; the first attempted source did not unlock it.
+The attempted batch stopped before writing either key.
 
 Successful creation updates the local reference map from the returned item IDs,
 without a follow-up vault read. Commit and push the reference-map change before
