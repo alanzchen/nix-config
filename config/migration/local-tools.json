@@ -1,0 +1,112 @@
+[
+  {
+    "name": "agentsview",
+    "kind": "file",
+    "source": "local file: review before reinstall"
+  },
+  {
+    "name": "agy",
+    "kind": "file",
+    "source": "local file: review before reinstall"
+  },
+  {
+    "name": "chatgpt-history",
+    "kind": "symlink",
+    "source": "~/Developer/chatgpt-history/chatgpt-history"
+  },
+  {
+    "name": "claude",
+    "kind": "symlink",
+    "source": "~/.local/share/claude/versions/2.1.309"
+  },
+  {
+    "name": "codex",
+    "kind": "symlink",
+    "source": "~/.codex/packages/standalone/releases/0.160.1-aarch64-apple-darwin/bin/codex"
+  },
+  {
+    "name": "codex-code-mode-host",
+    "kind": "symlink",
+    "source": "~/.codex/packages/standalone/releases/0.160.1-aarch64-apple-darwin/bin/codex-code-mode-host"
+  },
+  {
+    "name": "colab",
+    "kind": "symlink",
+    "source": "~/.local/share/uv/tools/google-colab-cli/bin/colab"
+  },
+  {
+    "name": "ghidra",
+    "kind": "file",
+    "source": "local file: review before reinstall"
+  },
+  {
+    "name": "instsci",
+    "kind": "symlink",
+    "source": "~/.local/share/uv/tools/instsci/bin/instsci"
+  },
+  {
+    "name": "instsci-mcp",
+    "kind": "symlink",
+    "source": "~/.local/share/uv/tools/instsci/bin/instsci-mcp"
+  },
+  {
+    "name": "java",
+    "kind": "symlink",
+    "source": "/opt/homebrew/Cellar/openjdk@21/21.0.11/libexec/openjdk.jdk/Contents/Home/bin/java"
+  },
+  {
+    "name": "javac",
+    "kind": "symlink",
+    "source": "/opt/homebrew/Cellar/openjdk@21/21.0.11/libexec/openjdk.jdk/Contents/Home/bin/javac"
+  },
+  {
+    "name": "node",
+    "kind": "symlink",
+    "source": "~/.hermes/node/bin/node"
+  },
+  {
+    "name": "npm",
+    "kind": "symlink",
+    "source": "~/.hermes/node/lib/node_modules/npm/bin/npm-cli.js"
+  },
+  {
+    "name": "npx",
+    "kind": "symlink",
+    "source": "~/.hermes/node/lib/node_modules/npm/bin/npx-cli.js"
+  },
+  {
+    "name": "oracle",
+    "kind": "symlink",
+    "source": "~/.local/lib/node_modules/@steipete/oracle/dist/bin/oracle-cli.js"
+  },
+  {
+    "name": "oracle-mcp",
+    "kind": "symlink",
+    "source": "~/.local/lib/node_modules/@steipete/oracle/dist/bin/oracle-mcp.js"
+  },
+  {
+    "name": "osxphotos",
+    "kind": "symlink",
+    "source": "~/.local/share/uv/tools/osxphotos/bin/osxphotos"
+  },
+  {
+    "name": "python3.11",
+    "kind": "symlink",
+    "source": "~/.local/share/uv/python/cpython-3.11.16-macos-aarch64-none/bin/python3.11"
+  },
+  {
+    "name": "python3.8",
+    "kind": "symlink",
+    "source": "~/.local/share/uv/python/cpython-3.8.20-macos-aarch64-none/bin/python3.8"
+  },
+  {
+    "name": "sketchybar-toggle",
+    "kind": "file",
+    "source": "local file: review before reinstall"
+  },
+  {
+    "name": "textfold",
+    "kind": "symlink",
+    "source": "~/.local/share/uv/tools/textfold/bin/textfold"
+  }
+]

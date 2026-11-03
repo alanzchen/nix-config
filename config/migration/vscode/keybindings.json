@@ -1,0 +1,88 @@
+// Empty
+[
+  {
+    "key": "cmd+=",
+    "command": "editor.action.fontZoomIn"
+  },
+  {
+    "key": "cmd+-",
+    "command": "editor.action.fontZoomOut"
+  },
+  {
+    "key": "cmd+0",
+    "command": "editor.action.fontZoomReset"
+  },
+  {
+    "key": "alt+-",
+    "command": "type",
+    "when": "editorLangId == r && editorTextFocus || editorLangId == rmd && editorTextFocus",
+    "args": {"text": " <- "}
+  },
+  {
+    "key": "ctrl+shift+m",
+    "command": "type",
+    "when": "editorLangId == r && editorTextFocus || editorLangId == rmd && editorTextFocus",
+    "args": {"text": " %>% "}
+  },
+  {
+    "key": "ctrl+shift+m",
+    "command": "-workbench.actions.view.problems"
+  },
+
+  // input indicative of r markdown code chunk
+  {
+    "key": "ctrl+shift+i",
+    "command": "editor.action.insertSnippet",
+    "when": "editorTextFocus && editorLangId == 'rmd'",
+    "args": {
+        "snippet": "```{r}\n${TM_SELECTED_TEXT}$0\n```"
+    },
+    "label": "input indicative of r markdown code chunk"
+  },
+
+  // you can also input indicative of code chunk in `r` file by inserting "# %% ":
+  // specifics in `https://github.com/REditorSupport/vscode-R/pull/662`
+  {
+    "key": "ctrl+shift+i",
+    "command": "editor.action.insertSnippet",
+    "when": "editorTextFocus && editorLangId == 'r'",
+    "args": {
+        "snippet": "$LINE_COMMENT %% "
+    },
+    "label": "input indicative of code chunk"
+  },
+
+  // open help panel for selection
+  {
+    "key": "f1",
+    "command": "r.helpPanel.openForSelection",
+    "when": "editorTextFocus && editorLangId == 'r' || editorTextFocus && editorLangId == 'rmd'"
+  },
+
+  // RStudio keybinding for R Package development
+  {
+    "key": "ctrl+shift+b",
+    "command": "r.install",
+    "when": "resourceLangId == 'r'"
+  },
+  {
+    "key": "ctrl+shift+e",
+    "command": "r.check",
+    "when": "resourceLangId == 'r'"
+  },
+  {
+    "key": "ctrl+shift+t",
+    "command": "r.test",
+    "when": "resourceLangId == 'r'"
+  },
+  {
+    "key": "ctrl+shift+d",
+    "command": "r.document",
+    "when": "resourceLangId == 'r'"
+  },
+  {
+    "key": "ctrl+shift+l",
+    "command": "r.loadAll",
+    "when": "resourceLangId == 'r'"
+  }
+]

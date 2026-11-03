@@ -1,0 +1,206 @@
+{
+  "git.path": "/run/current-system/sw/bin/git",
+  "latex-workshop.view.pdf.viewer": "tab",
+  "editor.fontFamily": "FiraCode-Retina, JetBrainsMono Nerd Font, monospace",
+  "editor.fontWeight": "450",
+  "todo-tree.tree.showScanModeButton": false,
+  "grammarly.domain": "academic",
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "r.bracketedPaste": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "todo-tree.regex.regex": "(//|#|%|<!--|;|/\\*|^|^[ \\t]*(-|\\d+.))\\s*($TAGS)",
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "diffEditor.wordWrap": "on",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "editor.accessibilitySupport": "off",
+  "r.workspaceViewer.removeHiddenItems": true,
+  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+  "git.enableSmartCommit": true,
+  "editor.wordWrap": "on",
+  "dash.fileNameToDocsetMap": {
+    "gruntfile.js": [
+      "grunt"
+    ],
+    "gulpfile.js": [
+      "gulp"
+    ],
+    "*.ino": [
+      "arduino"
+    ],
+    "[dD]ocker*": [
+      "docker"
+    ],
+    "Vagrantfile": [
+      "vagrant"
+    ]
+  },
+  "git.autofetch": true,
+  "editor.formatOnType": true,
+  "editor.suggestSelection": "first",
+  "r.workspaceViewer.showObjectSize": true,
+  "grammarly.audience": "expert",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.fontLigatures": true,
+  "workbench.editorAssociations": {
+    "*.ipynb": "jupyter-notebook",
+    "*.pdf": "latex-workshop-pdf-hook",
+    "*.PDF": "latex-workshop-pdf-hook"
+  },
+  "editor.tabSize": 2,
+  "git.confirmSync": false,
+  "terminal.integrated.inheritEnv": false,
+  "workbench.startupEditor": "none",
+  "update.mode": "manual",
+  "grammarly.config.suggestions.InformalPronounsAcademic": true,
+  "grammarly.startTextCheckInPausedState": true,
+  "grammarly.config.documentDomain": "academic",
+  "grammarly.config.suggestions.StylisticFragments": true,
+  "r.rmarkdown.knit.defaults.knitWorkingDirectory": "workspace root",
+  "editor.inlineSuggest.enabled": true,
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false,
+    "yaml": false,
+    "latex": false
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "notebook.output.textLineLimit": 100,
+  "customizeUI.titleBar": "inline",
+  "window.commandCenter": true,
+  "workbench.iconTheme": "macos-modern-minimal-finder-icon-theme",
+  "github.copilot.advanced": {},
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "codeium.enableConfig": {
+    "*": false,
+    "rmd": true
+  },
+  "latex-workshop.latex.recipe.default": "lastUsed",
+  "terminal.integrated.enableMultiLinePasteWarning": false,
+  "grammarly.files.include": [
+    "**/readme.md",
+    "**/README.md",
+    "**/*.txt",
+    "**/*.tex"
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "latexmk (xelatex)",
+      "tools": [
+        "xelatexmk"
+      ]
+    },
+    {
+      "name": "latexmk",
+      "tools": [
+        "latexmk"
+      ]
+    },
+    {
+      "name": "latexmk (latexmkrc)",
+      "tools": [
+        "latexmk_rconly"
+      ]
+    },
+    {
+      "name": "latexmk (lualatex)",
+      "tools": [
+        "lualatexmk"
+      ]
+    },
+    {
+      "name": "pdflatex -> bibtex -> pdflatex * 2",
+      "tools": [
+        "pdflatex",
+        "bibtex",
+        "pdflatex",
+        "pdflatex"
+      ]
+    },
+    {
+      "name": "Compile Rnw files",
+      "tools": [
+        "rnw2tex",
+        "latexmk"
+      ]
+    },
+    {
+      "name": "Compile Jnw files",
+      "tools": [
+        "jnw2tex",
+        "latexmk"
+      ]
+    },
+    {
+      "name": "Compile Pnw files",
+      "tools": [
+        "pnw2tex",
+        "latexmk"
+      ]
+    },
+    {
+      "name": "tectonic",
+      "tools": [
+        "tectonic"
+      ]
+    }
+  ],
+  "todo-tree.general.tags": [
+    "BUG",
+    "HACK",
+    "FIXME",
+    "TODO",
+    "XXX",
+    "[ ]",
+    "[x]",
+    "NOTE"
+  ],
+  "github.copilot.editor.enableAutoCompletions": true,
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "security.workspace.trust.untrustedFiles": "open",
+  "jupyter.askForKernelRestart": false,
+  "python.diagnostics.sourceMapsEnabled": true,
+  "workbench.productIconTheme": "macos-modern",
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "wolfram.notebook.kernelEnabled": true,
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "xml.symbols.maxItemsComputed": 50000,
+  "[latex]": {
+    "editor.defaultFormatter": "James-Yu.latex-workshop"
+  },
+  "makefile.configureOnOpen": false,
+  "lean4.alwaysAskBeforeInstallingLeanVersions": false,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "[rmd]": {
+    "editor.defaultFormatter": "REditorSupport.r"
+  },
+  "chatgpt.config": {},
+  "githubPullRequests.createOnPublishBranch": "never",
+  "wolfram.notebook.rendering.forceInputForm": true,
+  "workbench.secondarySideBar.showLabels": false,
+  "python.analysis.typeCheckingMode": "standard",
+  "claudeCode.preferredLocation": "panel",
+  "http.systemCertificatesNode": true,
+  "geminicodeassist.displayInlineContextHint": false,
+  "chat.viewSessions.orientation": "stacked",
+  "terminal.integrated.stickyScroll.enabled": false,
+  "claudeCode.hideOnboarding": true,
+  "claudeCode.focusView": true,
+  "workbench.colorTheme": "Light 2026",
+  "r.rterm.mac": "/opt/homebrew/bin/R"
+}

@@ -1,0 +1,9 @@
+/.superpowers/
+/result
+.DS_Store
+__pycache__/
+*.pyc
+.bootstrap/
+*.before-nix
+*.env
+!*.example.env

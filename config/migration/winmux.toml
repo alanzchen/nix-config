@@ -1,0 +1,211 @@
+# Snapshot of the reference Mac; wm-toggle owns startup.
+# Static seed for WinMux. The live file stays mutable because WinMux records
+# project names and colors in it; activation only copies this seed when the live
+# config is absent.
+
+config-version = 2
+
+# wm-toggle owns login restoration so the saved on/off state remains useful.
+start-at-login = false
+auto-reload-config = true
+
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+tab-group-padding = 30
+
+window-tabs.enabled = true
+window-tabs.height = 36
+
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+automatically-unhide-macos-hidden-apps = false
+automatically-tile-new-windows = true
+enable-shake-to-toggle-tiling = true
+
+# Editors, terminals, Finder, and browsers should tile separately unless a
+# tab group is requested explicitly with Caps Lock+Comma.
+auto-add-new-windows-to-tab-group = false
+
+shortcuts-preset = 'none'
+
+# Workspaces are lazy: they exist only while they contain windows.
+persistent-workspaces = []
+on-mode-changed = []
+
+[key-mapping]
+    preset = 'qwerty'
+
+[gaps]
+    inner.horizontal = 8
+    inner.vertical = 8
+    outer.left = 12
+    outer.bottom = 12
+    outer.top = 12
+    outer.right = 12
+
+[workspace-sidebar]
+    share-pinned-tabs = true
+    intelligence.mode = 'off'
+    launcher-menu-fallback = true
+    music-player-at-bottom = true
+    browser-tab-icons = true
+    browser-tabs = true
+    tabs-always-expanded = true
+    project-order = ["project-1", "default", "project-15a2bbf8-8bf3-4a29-b026-87aed9663102", "project-5d285c78-d529-41f4-85d2-9558abf03ed1", "project-b0c5c260-4bf6-43f5-8314-fa39e46b6356"]
+    show-hidden-workspace-app-reminders = true
+    dock-appearance.glass-opacity = 0.55
+    dock-position = "bottom"
+    dock-left-gap = 4
+    show-app-badges = true
+    dock-magnification-amount = 1.0
+    mode = "tabs"
+    dock-icon-size = 48
+    glass-opacity = 0.51
+    dock-magnification = true
+    show-app-icons = true
+    enable-focus = false
+    enabled = true
+    stay-on-top = false
+    auto-hide = false
+    always-expanded = false
+    collapsed-width = 50
+    width = 336
+    menu-bar-reserve-height = 43
+
+    # Releasing an ad-hoc project must not close its windows.
+    project-deletion-action = 'move-windows-to-fallback'
+
+    show-status-pills = true
+    show-clock = true
+    show-seconds = true
+    show-date = true
+    show-weekday = true
+    chrome-style = 'liquid-glass'
+    solid-chrome-color = 'fog'
+    solid-chrome-custom-color = '#191B20'
+
+[workspace-sidebar.project-labels]
+"default" = "Research"
+
+"project-1" = "Base"
+"project-15a2bbf8-8bf3-4a29-b026-87aed9663102" = "ITSS"
+"project-b0c5c260-4bf6-43f5-8314-fa39e46b6356" = "Platform Paper"
+"project-5d285c78-d529-41f4-85d2-9558abf03ed1" = "Replika"
+[workspace-sidebar.project-colors]
+    "default" = "#C4B5FD"
+
+[mode.main.binding]
+    # Caps Lock emits Option through Karabiner. Caps+O opens the project and
+    # workspace sidebar without forcing any workspace to exist.
+    alt-o = 'open-sidebar'
+
+    # Directional window management.
+    alt-slash = 'layout tiles horizontal vertical'
+    alt-comma = 'layout tab-group horizontal vertical'
+    alt-minus = 'resize smart -50'
+    alt-equal = 'resize smart +50'
+
+    # Numbered workspaces are deliberately unnamed and remain scoped to the
+    # active project. N moves the focused window to a fresh lazy workspace and
+    # follows it;
+    # B, C, G, M, T, and Z activate/launch frequently used apps; P keeps the
+    # existing video-workspace muscle memory.
+    alt-0 = 'workspace A'
+    alt-p = 'workspace --auto-back-and-forth p'
+    alt-b = 'exec-and-forget /usr/bin/open -b com.basecamp.basecamp3'
+    alt-c = 'exec-and-forget /usr/bin/open -b com.openai.codex'
+    alt-g = 'exec-and-forget /usr/bin/open -b com.mitchellh.ghostty'
+    alt-m = 'exec-and-forget /usr/bin/open -b com.apple.mail'
+    alt-n = 'move-node-to-workspace --focus-follows-window new'
+    alt-t = 'exec-and-forget /usr/bin/open -b ru.keepcoder.Telegram'
+    alt-z = 'exec-and-forget /usr/bin/open -b app.zen-browser.zen'
+    alt-tab = 'workspace-back-and-forth'
+
+    alt-shift-0 = 'move-node-to-workspace A'
+    alt-shift-c = 'move-node-to-workspace c'
+    alt-shift-z = 'move-node-to-workspace z'
+    alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+
+    # Projects are the outer layer. Option+Command changes projects; adding
+    # Shift carries the current window to that project.
+    alt-cmd-h = 'project prev'
+    alt-cmd-l = 'project next'
+    alt-cmd-1 = 'project 1'
+    alt-cmd-2 = 'project 2'
+    alt-cmd-3 = 'project 3'
+    alt-cmd-4 = 'project 4'
+    alt-cmd-5 = 'project 5'
+    alt-cmd-6 = 'project 6'
+    alt-cmd-7 = 'project 7'
+    alt-cmd-8 = 'project 8'
+    alt-cmd-9 = 'project 9'
+    alt-cmd-shift-h = 'move-node-to-project prev'
+    alt-cmd-shift-l = 'move-node-to-project next'
+    alt-cmd-shift-1 = 'move-node-to-project 1'
+    alt-cmd-shift-2 = 'move-node-to-project 2'
+    alt-cmd-shift-3 = 'move-node-to-project 3'
+    alt-cmd-shift-4 = 'move-node-to-project 4'
+    alt-cmd-shift-5 = 'move-node-to-project 5'
+    alt-cmd-shift-6 = 'move-node-to-project 6'
+    alt-cmd-shift-7 = 'move-node-to-project 7'
+    alt-cmd-shift-8 = 'move-node-to-project 8'
+    alt-cmd-shift-9 = 'move-node-to-project 9'
+
+    # Karabiner's Tab+Space layer emits this private chord.
+    ctrl-alt-cmd-shift-m = 'move-workspace-to-monitor --wrap-around next'
+
+    alt-shift-semicolon = 'mode service'
+
+alt-1 = "workspace 1"
+alt-2 = "workspace 2"
+alt-3 = "workspace 3"
+alt-4 = "workspace 4"
+alt-5 = "workspace 5"
+alt-6 = "workspace 6"
+alt-7 = "workspace 7"
+alt-8 = "workspace 8"
+alt-9 = "workspace 9"
+alt-h = "focus left"
+alt-j = "focus down"
+alt-k = "focus up"
+alt-l = "focus right"
+alt-shift-1 = "move-node-to-workspace 1"
+alt-shift-2 = "move-node-to-workspace 2"
+alt-shift-3 = "move-node-to-workspace 3"
+alt-shift-4 = "move-node-to-workspace 4"
+alt-shift-5 = "move-node-to-workspace 5"
+alt-shift-6 = "move-node-to-workspace 6"
+alt-shift-7 = "move-node-to-workspace 7"
+alt-shift-8 = "move-node-to-workspace 8"
+alt-shift-9 = "move-node-to-workspace 9"
+alt-shift-i = "move up"
+alt-shift-j = "move left"
+alt-shift-k = "move down"
+alt-shift-l = "move right"
+alt-shift-t = "layout floating tiling"
+cmd-down = "join-with down"
+cmd-left = "join-with left"
+cmd-right = "join-with right"
+cmd-up = "join-with up"
+[mode.service.binding]
+    esc = ['reload-config', 'mode main']
+    r = ['flatten-workspace-tree', 'mode main']
+    f = ['layout floating', 'mode main']
+    t = ['layout tiling', 'mode main']
+    backspace = ['close-all-windows-but-current', 'mode main']
+    alt-shift-h = ['join-with left', 'mode main']
+    alt-shift-j = ['join-with down', 'mode main']
+    alt-shift-k = ['join-with up', 'mode main']
+    alt-shift-l = ['join-with right', 'mode main']
+
+[workspace-sidebar.project-emojis]
+"project-1" = "🫪"
+
+"default" = "🔬"
+"project-15a2bbf8-8bf3-4a29-b026-87aed9663102" = "👨🏻‍🏫"
+[workspace-sidebar.sidebar-appearance]
+    background-opacity = 0.14
+
+[workspace-sidebar.workspace-labels]
+"3" = "Review"
