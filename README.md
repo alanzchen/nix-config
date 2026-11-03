@@ -5,7 +5,8 @@
 The `personal-new` profile and resumable installer use the current personal Mac
 as a template. Install/unlock 1Password, enable its SSH agent and CLI integration,
 then use the one-line command in [`scripts/new-mac-command.txt`](scripts/new-mac-command.txt).
-The configuration is delivered through the private `alanzchen/nix-config` repo.
+The configuration is downloaded from the public `alanzchen/nix-config` repo;
+no GitHub login is needed to install it.
 See [`docs/new-mac.md`](docs/new-mac.md) for prerequisites, captured settings,
 credential handling, manual approvals, and the explicit remaining gaps.
 

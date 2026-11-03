@@ -10,13 +10,13 @@ The installer refuses to activate `personal-new` on `alans-macbook-air-1`.
 2. Install and unlock 1Password. Under **Settings > Developer**, enable the
    **SSH agent** and **Integrate with 1Password CLI**. The installer supplies
    the CLI; the manually installed GUI stays vendor-managed.
-3. The SSH key in 1Password must have access to the private
-   `alanzchen/nix-config` GitHub repository. An account password alone does not
-   give SSH access. Keep the account recovery material available separately.
+3. No GitHub login is required to download the public configuration. Sign into
+   the 1Password accounts containing your mapped keys (including Hermes).
+   Keep the account recovery material available separately.
 4. Run the single command in `scripts/new-mac-command.txt` in Terminal. That
-   command embeds the small, readable `scripts/clone-and-setup.sh` launcher;
+   command downloads the small, readable `scripts/clone-and-setup.sh` launcher;
    it contains no credential. It can install Apple's command-line developer
-   tools, wait for the installer, clone via the 1Password agent, and start setup.
+   tools, wait for the installer, clone over public HTTPS, and start setup.
 
 There will still be interactive Apple installer/admin prompts, 1Password
 authorization prompts, macOS app permissions, and application sign-ins.

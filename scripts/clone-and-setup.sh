@@ -1,5 +1,5 @@
 #!/bin/bash
-# This small entry point uses only macOS tools and the 1Password SSH agent.
+# This public entry point uses only macOS tools; cloning needs no GitHub login.
 set -euo pipefail
 [ "$(uname -s)" = Darwin ] && [ "$(uname -m)" = arm64 ] || exit 1
 [ "$(id -u)" -ne 0 ] || { echo 'Run as your normal user.' >&2; exit 1; }
@@ -16,18 +16,17 @@ if ! /usr/bin/xcode-select -p >/dev/null 2>&1; then
     sleep 5
   done
 fi
-# SSH_AUTH_SOCK avoids quoting a path with spaces inside a shell command.
-export SSH_AUTH_SOCK="$agent"
-export GIT_SSH_COMMAND='/usr/bin/ssh -o IdentityAgent=SSH_AUTH_SOCK'
 destination="$HOME/Developer/nix-config"
 mkdir -p "$(dirname "$destination")"
 if [ ! -e "$destination" ]; then
-  /usr/bin/git clone git@github.com:alanzchen/nix-config.git "$destination"
+  /usr/bin/git clone https://github.com/alanzchen/nix-config.git "$destination"
 else
   remote="$(/usr/bin/git -C "$destination" remote get-url origin 2>/dev/null || true)"
-  [ "$remote" = git@github.com:alanzchen/nix-config.git ] || {
-    echo 'Existing destination is not this repository; preserve it and choose another location.' >&2
-    exit 1
-  }
+  case "$remote" in
+    https://github.com/alanzchen/nix-config.git|git@github.com:alanzchen/nix-config.git) ;;
+    *)
+      echo 'Existing destination is not this repository; preserve it and choose another location.' >&2
+      exit 1 ;;
+  esac
 fi
 exec /bin/bash "$destination/scripts/bootstrap-mac.sh"
