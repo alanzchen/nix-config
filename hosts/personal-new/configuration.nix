@@ -46,10 +46,7 @@ in
         exit 1
       fi
     ''}
-    if [ -L /Applications/WinMux.app ]; then
-      echo "Refusing to replace a symlink at /Applications/WinMux.app" >&2
-      exit 1
-    fi
-    /usr/bin/ditto ${winmux}/Applications/WinMux.app /Applications/WinMux.app
+    ${pkgs.python3}/bin/python3 ${../../scripts/install-winmux.py} \
+      ${winmux}/Applications/WinMux.app
   '';
 }

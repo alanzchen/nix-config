@@ -48,6 +48,10 @@ bash scripts/bootstrap-mac.sh --plan
 - Installs version 0.6.401 of the personal WinMux fork and uses that app's own
   bundled CLI. This is the version observed on the reference Mac. The older
   `packages/winmux.nix` remains the official-release fallback.
+  Retries compare bundle contents, executable permissions, symlink targets,
+  and signatures, and leave an identical installed app untouched. An existing
+  different version is preserved for review rather than overwritten. First
+  installation validates a staged copy before moving it into Applications.
 - Seeds the captured WinMux preferences and project labels on first install.
   Monitor identifiers are omitted; `wm-toggle` owns login restoration. Existing
   live settings are not overwritten. First activation does not require WinMux
